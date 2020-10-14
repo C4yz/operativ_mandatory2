@@ -82,8 +82,68 @@ void initmem(strategies strategy, size_t sz)
  *  Restriction: requested >= 1
  */
 
-void insertNewNode(){
+void insertNewNodeBefore(){
 
+}
+
+/* Inspiration er tager fra geeks for geeks https://www.geeksforgeeks.org/doubly-linked-list/ */
+void insertNewNodeAfter(struct memoryList *givenNode, size_t givenSize, void *givenPtr, char givenAlloc){
+    
+    if(givenNode == NULL){
+        return 0;
+    }
+
+    /* Her bliver den nye node alloceret i vores hukommelse.  */
+    struct memoryList *node = (struct node*)malloc(sizeof(node));
+
+
+    /* Her sætter vi den nye nods parameter */
+    node -> size = givenSize;
+    node -> alloc = givenAlloc;
+    node -> ptr = givenPtr;
+
+    /* Her siger jeg at den nye next_node skal pege på den node som den forrige next_node pegede på.  */ 
+    node -> next_node = givenNode -> next_node;
+
+    /* Her siger jeg så at den forriges nodes next_node skal nu pege på den nye node som lige er blevet lavet */ 
+    givenNode -> next_node = node;
+
+    /* Her siger jeg så at den ny node skal pege på den forrige node gennem last node. */
+    node -> last_node = givenNode;
+
+    /*  */
+    if(node -> next_node == NULL){
+        node -> next_node -> last_node = node;
+    }
+
+
+}
+
+/* For at slette en node er der blevet taget inspiration fra geeks for geeks https://www.geeksforgeeks.org/delete-a-node-in-a-doubly-linked-list/ */
+void deleteNode(struct memoryList **head_ref, struct memoryList *delNode){
+    
+    /* Først bliver der lavet en base case*/
+    if(head_ref == NULL || delNode == NULL){
+        return 0;
+    }
+
+    /* Herefter kigger vi på om det er head node der skal slettes */ 
+    if(head_ref == delNode){
+        head_ref = delNode ->next_node;
+    }
+
+    /* Her bliver der en node slettet hvis den næste node ikker er NULL */
+    if(delNode -> next_node != NULL){
+        delNode -> next_node -> last_node = delNode -> last_node;
+    } 
+
+    /* Her bliver der en node slettet hvis den tidligere node ikke er NULL */
+    if(delNode -> last_node != NULL){
+        delNode -> last_node -> next_node = delNode -> next_node;
+    }
+
+    myfree(delNode);
+    return;
 }
 
 void *mymalloc(size_t requested)
@@ -94,7 +154,7 @@ void *mymalloc(size_t requested)
 
     while(CurrentNode != NULL){
         if(CurrentNode -> size > requested){
-            
+            insertNewNodeAfter(CurrentNode, requested, CurrentNode ->ptr, CurrentNode ->alloc);
         }
     }
 
