@@ -5,7 +5,7 @@
 #include "mymem.h"
 #include <time.h>
 
-
+#define TRUE 1
 /* The main structure for implementing memory allocation.
  * You may change this to fit your implementation.
  */
@@ -55,7 +55,13 @@ void initmem(strategies strategy, size_t sz)
     if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+    if(head != NULL){
+        free(head);
+    }
 
+    if(next != NULL){
+        free(next);
+    }
 
     myMemory = malloc(sz);
 
@@ -82,9 +88,6 @@ void initmem(strategies strategy, size_t sz)
  *  Restriction: requested >= 1
  */
 
-void insertNewNodeBefore(){
-
-}
 
 /* Inspiration er tager fra geeks for geeks https://www.geeksforgeeks.org/doubly-linked-list/ */
 void insertNewNodeAfter(struct memoryList *givenNode, size_t givenSize, void *givenPtr, char givenAlloc){
@@ -98,25 +101,34 @@ void insertNewNodeAfter(struct memoryList *givenNode, size_t givenSize, void *gi
 
 
     /* Her sætter vi den nye nods parameter */
-    node -> size = givenSize;
+    node -> size = givenNode -> size - givenSize;
     node -> alloc = givenAlloc;
-    node -> ptr = givenPtr;
+    node -> ptr = &givenPtr + givenSize;
 
     /* Her siger jeg at den nye next_node skal pege på den node som den forrige next_node pegede på.  */ 
     node -> next_node = givenNode -> next_node;
 
-    /* Her siger jeg så at den forriges nodes next_node skal nu pege på den nye node som lige er blevet lavet */ 
-    givenNode -> next_node = node;
-
     /* Her siger jeg så at den ny node skal pege på den forrige node gennem last node. */
     node -> last_node = givenNode;
+
+    /* Her siger jeg så at den forriges nodes next_node skal nu pege på den nye node som lige er blevet lavet */ 
+    givenNode -> next_node = node;
 
     /*  */
     if(node -> next_node == NULL){
         node -> next_node -> last_node = node;
     }
 
+    /* Dette if statment sætter vores currentNode/givenNode til at være lig med den node som vi lavede vores ny node ud fra, så vi kan begynde
+    derfra igen næste gang. */
+    if(givenNode -> next_node == NULL){
+        givenNode = head;
+    }
+    else{
+        givenNode = next;
+    }
 
+    return 1;
 }
 
 /* For at slette en node er der blevet taget inspiration fra geeks for geeks https://www.geeksforgeeks.org/delete-a-node-in-a-doubly-linked-list/ */
@@ -142,7 +154,7 @@ void deleteNode(struct memoryList **head_ref, struct memoryList *delNode){
         delNode -> last_node -> next_node = delNode -> next_node;
     }
 
-    myfree(delNode);
+    free(delNode);
     return;
 }
 
@@ -153,9 +165,13 @@ void *mymalloc(size_t requested)
     struct memoryList *CurrentNode = head;
 
     while(CurrentNode != NULL){
-        if(CurrentNode -> size > requested){
+        if(CurrentNode -> size > requested && CurrentNode -> alloc != 1){ 
             insertNewNodeAfter(CurrentNode, requested, CurrentNode ->ptr, CurrentNode ->alloc);
+            CurrentNode -> size = requested;
+            CurrentNode -> alloc = 1;
+            return CurrentNode -> ptr; 
         }
+        CurrentNode =  next;
     }
 
     return NULL;
@@ -163,9 +179,14 @@ void *mymalloc(size_t requested)
 
 
 /* Frees a block of memory previously allocated by mymalloc. */
+/*  */ 
 void myfree(void* node)
 {
+    struct memoryList *temp = head;
 
+    while(TRUE){
+        
+    }
     return;
 }
 
