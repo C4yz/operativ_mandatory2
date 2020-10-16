@@ -28,7 +28,9 @@ size_t mySize;
 void *myMemory = NULL;
 
 static struct memoryList *head;
+static struct memoryList *tail;
 static struct memoryList *next;
+static struct memoryList *Current;
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -93,7 +95,7 @@ void initmem(strategies strategy, size_t sz)
 void insertNewNodeAfter(struct memoryList *givenNode, size_t givenSize, void *givenPtr, char givenAlloc){
     
     if(givenNode == NULL){
-        return 0;
+        return;
     }
 
     /* Her bliver den nye node alloceret i vores hukommelse.  */
@@ -128,7 +130,7 @@ void insertNewNodeAfter(struct memoryList *givenNode, size_t givenSize, void *gi
         givenNode = next;
     }
 
-    return 1;
+    return;
 }
 
 /* For at slette en node er der blevet taget inspiration fra geeks for geeks https://www.geeksforgeeks.org/delete-a-node-in-a-doubly-linked-list/ */
@@ -136,7 +138,7 @@ void deleteNode(struct memoryList **head_ref, struct memoryList *delNode){
     
     /* Først bliver der lavet en base case*/
     if(head_ref == NULL || delNode == NULL){
-        return 0;
+        return;
     }
 
     /* Herefter kigger vi på om det er head node der skal slettes */ 
@@ -169,9 +171,16 @@ void *mymalloc(size_t requested)
             insertNewNodeAfter(CurrentNode, requested, CurrentNode ->ptr, CurrentNode ->alloc);
             CurrentNode -> size = requested;
             CurrentNode -> alloc = 1;
-            return CurrentNode -> ptr; 
+
+            if(CurrentNode -> next_node == NULL){
+                CurrentNode = tail;
+            }
+
+            return CurrentNode -> ptr;
         }
-        CurrentNode =  next;
+
+        CurrentNode -> next_node = CurrentNode;
+        CurrentNode =  Current;
     }
 
     return NULL;
@@ -184,10 +193,44 @@ void myfree(void* node)
 {
     struct memoryList *temp = head;
 
-    while(TRUE){
-        
+    while(TRUE) {
+        if (temp->ptr == node) {
+            temp->alloc = 0;
+
+            /* Her kigger vi på om den node som vi vil frigøre's nabo's alloc også er lig med 0. Hvis den er skal de 2 nodes ligges sammen.  */
+            if ((temp->last_node != NULL) && (temp->last_node->alloc == 0)) {
+                temp->last_node->size += temp->size;
+                /* Siden temp -> last nu skal fjernes skal dens next pointer sættes til at være tmp -> next */
+                temp -> last_node -> next_node = temp -> next_node;
+                temp -> next_node -> last_node = temp -> last_node;
+                free(temp);
+            }
+            break;
+        } else if (temp->next_node != NULL) {
+            temp = temp->next_node;
+        } else {
+            break;
+        }
     }
-    return;
+    while (TRUE){
+        if(temp -> ptr == node){
+            temp -> alloc = 0;
+
+            if((temp -> next_node != NULL) && (temp -> next_node -> alloc = 0)){
+                temp -> last_node -> size += temp -> size;
+
+                temp -> last_node -> next_node = temp -> next_node;
+                temp -> next_node -> last_node = temp -> last_node;
+                free(temp);
+            }
+            break;
+        } else if(temp -> last_node != NULL){
+            temp = temp -> last_node;
+        } else {
+            break;
+        }
+    }
+
 }
 
 /****** Memory status/property functions ******

@@ -3,4 +3,4 @@ project(mandatory_2 C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(mandatory_2 main.c)
+add_executable(mandatory_2 mymem.c)
